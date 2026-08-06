@@ -3,7 +3,7 @@
        'paths' => ['api/*', 'sanctum/csrf-cookie'],
        'allowed_methods' => ['*'],
        // Put your exact Vercel URL here:
-       'allowed_origins' => ['https://frontendaco-otug.vercel.app'], 
+       'allowed_origins' => ['https://frontendaco-otug.vercel.app'],
        'allowed_origins_patterns' => [],
        'allowed_headers' => ['*'],
        'exposed_headers' => [],
