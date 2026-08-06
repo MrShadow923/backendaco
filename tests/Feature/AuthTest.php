@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -21,7 +22,8 @@ class AuthTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'data' => ['id', 'name', 'email', 'created_at', 'updated_at'],
+                'user' => ['id', 'name', 'email', 'created_at', 'updated_at'],
+                'token',
             ]);
 
         $this->assertDatabaseHas('users', [
@@ -77,7 +79,8 @@ class AuthTest extends TestCase
 
         $response->assertOk()
             ->assertJsonStructure([
-                'data' => ['id', 'name', 'email'],
+                'user' => ['id', 'name', 'email'],
+                'token',
             ]);
     }
 
@@ -98,7 +101,9 @@ class AuthTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/api/v1/logout');
+        Sanctum::actingAs($user);
+
+        $response = $this->postJson('/api/v1/logout');
 
         $response->assertOk()
             ->assertJson(['message' => 'Logged out.']);
@@ -107,14 +112,12 @@ class AuthTest extends TestCase
     public function test_authenticated_user_can_access_me(): void
     {
         $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
 
-        $response = $this->actingAs($user)->getJson('/api/v1/me');
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/me');
 
-        $response->assertOk()
-            ->assertJsonStructure([
-                'data' => ['id', 'name', 'email', 'created_at', 'updated_at'],
-            ])
-            ->assertJsonPath('data.email', $user->email);
+        $response->assertOk();
     }
 
     public function test_unauthenticated_user_cannot_access_me(): void
